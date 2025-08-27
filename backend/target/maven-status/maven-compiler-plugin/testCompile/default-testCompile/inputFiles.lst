@@ -1,0 +1,3 @@
+/home/runner/work/expense-tracker/expense-tracker/backend/src/test/java/com/expensetracker/controller/AuthControllerTest.java
+/home/runner/work/expense-tracker/expense-tracker/backend/src/test/java/com/expensetracker/service/AuthServiceTest.java
+/home/runner/work/expense-tracker/expense-tracker/backend/src/test/java/com/expensetracker/controller/TestSecurityConfig.java

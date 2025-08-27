@@ -1,0 +1,3 @@
+com/expensetracker/service/AuthServiceTest.class
+com/expensetracker/controller/AuthControllerTest.class
+com/expensetracker/controller/TestSecurityConfig.class
