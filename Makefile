@@ -57,9 +57,11 @@ setup: ## Initial setup - build and start services
 # Smoke Tests
 smoke-test: ## Run smoke tests against running services
 	@echo "Running smoke tests..."
-	@echo "Testing backend health..."
-	curl -f http://localhost:8080/actuator/health || (echo "Backend health check failed" && exit 1)
-	@echo "Backend is healthy!"
+	@if ! command -v jq &> /dev/null; then \
+		echo "jq is required for smoke tests. Please install jq."; \
+		exit 1; \
+	fi
+	./scripts/smoke-test.sh
 
 # Quick development cycle
 dev: ## Quick development cycle - build and restart
