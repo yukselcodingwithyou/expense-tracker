@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: expense-tracker-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: expense-tracker
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - expense-tracker-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: expense-tracker-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - expense-tracker-network
+
+  backend:
+    build: ./backend
+    container_name: expense-tracker-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/expense-tracker
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SWAGGER_ENABLED=true
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - expense-tracker-network
+    volumes:
+      - ./backend/logs:/app/logs
+
+  # Optional MinIO for file storage
+  minio:
+    image: minio/minio:latest
+    container_name: expense-tracker-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - expense-tracker-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+  minio_data:
+
+networks:
+  expense-tracker-network:
+    driver: bridge
