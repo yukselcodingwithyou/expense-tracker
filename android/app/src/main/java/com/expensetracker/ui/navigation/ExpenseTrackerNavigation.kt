@@ -6,7 +6,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.expensetracker.ui.auth.LoginScreen
-import com.expensetracker.ui.dashboard.DashboardScreen
 
 @Composable
 fun ExpenseTrackerNavigation(
@@ -27,7 +26,7 @@ fun ExpenseTrackerNavigation(
         }
         
         composable(Screen.Dashboard.route) {
-            DashboardScreen()
+            MainBottomNavigation()
         }
     }
 }
@@ -36,5 +35,7 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Dashboard : Screen("dashboard")
     object AddExpense : Screen("add_expense")
+    object Reports : Screen("reports")
+    object Settings : Screen("settings")
     object Categories : Screen("categories")
 }
