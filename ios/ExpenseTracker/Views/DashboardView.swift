@@ -1,40 +1,136 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @State private var balance: Double = 2450.75
-    @State private var income: Double = 3200.00
-    @State private var expenses: Double = 749.25
+    private let demoData = DemoData.shared
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
-                    BalanceCard(balance: balance, income: income, expenses: expenses)
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Recent Transactions")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                        
-                        ForEach(0..<5) { index in
-                            TransactionRow(
-                                title: "Sample Transaction \(index)",
-                                amount: 25.50,
-                                isExpense: index % 2 == 0,
-                                category: "Groceries"
+                VStack(spacing: Theme.Spacing.lg) {
+                    // Main stat tiles
+                    VStack(spacing: Theme.Spacing.md) {
+                        HStack(spacing: Theme.Spacing.md) {
+                            StatTileView(
+                                title: "Total Income",
+                                amount: demoData.totalIncome.formatAsCurrency(),
+                                color: Theme.Colors.income
+                            )
+                            
+                            StatTileView(
+                                title: "Total Expenses", 
+                                amount: demoData.totalExpenses.formatAsCurrency(),
+                                color: Theme.Colors.expense
                             )
                         }
+                        
+                        StatTileView(
+                            title: "Balance",
+                            amount: demoData.balance.formatAsCurrency(),
+                            color: Theme.Colors.success
+                        )
                     }
-                    .padding(.horizontal)
+                    
+                    // Expense Breakdown
+                    PastelCard {
+                        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                            Text("Expense Breakdown")
+                                .font(Theme.Typography.titleM)
+                                .foregroundColor(Theme.Colors.onSurface)
+                            
+                            // Simple bar chart placeholder
+                            VStack(spacing: Theme.Spacing.sm) {
+                                ForEach(demoData.categories.filter(\.isExpense).prefix(4)) { category in
+                                    HStack {
+                                        Image(systemName: category.icon)
+                                            .foregroundColor(Theme.Colors.primary)
+                                            .frame(width: 20)
+                                        
+                                        Text(category.name)
+                                            .font(Theme.Typography.body)
+                                            .foregroundColor(Theme.Colors.onSurface)
+                                        
+                                        Spacer()
+                                        
+                                        Text("$\(Int.random(in: 200...800))")
+                                            .font(Theme.Typography.label)
+                                            .foregroundColor(Theme.Colors.onSurface)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Savings Goals Preview
+                    PastelCard {
+                        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                            HStack {
+                                Text("Savings Goals")
+                                    .font(Theme.Typography.titleM)
+                                    .foregroundColor(Theme.Colors.onSurface)
+                                
+                                Spacer()
+                                
+                                NavigationLink("View All") {
+                                    SavingsGoalsView()
+                                }
+                                .font(Theme.Typography.caption)
+                                .foregroundColor(Theme.Colors.primary)
+                            }
+                            
+                            ForEach(demoData.savingsGoals.prefix(2)) { goal in
+                                VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                                    HStack {
+                                        Text(goal.name)
+                                            .font(Theme.Typography.body)
+                                            .foregroundColor(Theme.Colors.onSurface)
+                                        
+                                        Spacer()
+                                        
+                                        Text(goal.progressPercent)
+                                            .font(Theme.Typography.caption)
+                                            .foregroundColor(Theme.Colors.onSurface.opacity(0.7))
+                                    }
+                                    
+                                    Text("\(goal.currentAmount.formatAsCurrency()) / \(goal.targetAmount.formatAsCurrency())")
+                                        .font(Theme.Typography.caption)
+                                        .foregroundColor(Theme.Colors.onSurface.opacity(0.7))
+                                    
+                                    ProgressBarWithLabel(progress: goal.progress, label: goal.progressPercent)
+                                }
+                                .padding(.vertical, Theme.Spacing.xs)
+                            }
+                        }
+                    }
+                    
+                    // Recent Transactions
+                    PastelCard {
+                        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                            Text("Recent Transactions")
+                                .font(Theme.Typography.titleM)
+                                .foregroundColor(Theme.Colors.onSurface)
+                            
+                            ForEach(demoData.transactions.prefix(5)) { transaction in
+                                ListRow(
+                                    leadingIcon: "creditcard",
+                                    title: transaction.title,
+                                    subtitle: "\(transaction.category) • \(transaction.date.formatAsTime())",
+                                    rightValue: "\(transaction.isExpense ? "-" : "+")\(transaction.amount.formatAsCurrency())",
+                                    showChevron: false
+                                )
+                            }
+                        }
+                    }
                 }
+                .padding(Theme.Spacing.lg)
             }
+            .background(Theme.Colors.surface)
             .navigationTitle("Dashboard")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        // TODO: Navigate to add transaction
-                    }) {
+                    NavigationLink(destination: AddExpenseView()) {
                         Image(systemName: "plus")
+                            .foregroundColor(Theme.Colors.primary)
                     }
                 }
             }
