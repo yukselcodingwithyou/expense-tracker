@@ -62,6 +62,109 @@ struct RecurringExpense: Identifiable {
     let nextDate: Date
 }
 
+// MARK: - Backend DTO Models
+
+struct LedgerCreateDTO: Codable {
+    let type: String // "EXPENSE" or "INCOME"
+    let amountMinor: Int64
+    let currency: String
+    let categoryId: String
+    let memberId: String
+    let occurredAt: String // ISO 8601 timestamp
+    let notes: String?
+}
+
+struct RecurringRuleDTO: Codable {
+    let id: String?
+    let familyId: String
+    let name: String
+    let type: String // "EXPENSE" or "INCOME"
+    let amountMinor: Int64
+    let currency: String
+    let categoryId: String
+    let memberId: String
+    let frequency: FrequencyDTO
+    let startDate: String // ISO date
+    let endDate: String?
+    let timezone: String
+    let nextRunAt: String?
+    let isPaused: Bool
+}
+
+struct FrequencyDTO: Codable {
+    let unit: String // "WEEKLY", "MONTHLY", "YEARLY"
+    let interval: Int
+    let byMonthDay: [Int]?
+}
+
+struct BudgetDTO: Codable {
+    let id: String?
+    let name: String
+    let period: PeriodDTO
+    let overallLimitMinor: Int64
+    let includeRecurring: Bool
+    let alertThresholdPct: Int
+    let perCategory: [CategoryBudgetDTO]
+}
+
+struct PeriodDTO: Codable {
+    let type: String // "MONTH", "QUARTER", "YEAR", "CUSTOM"
+    let start: String // ISO date
+    let end: String // ISO date
+}
+
+struct CategoryBudgetDTO: Codable {
+    let categoryId: String
+    let limitMinor: Int64
+}
+
+struct BudgetSpendDTO: Codable {
+    let period: PeriodDTO
+    let overall: SpendingSummaryDTO
+    let byCategory: [CategorySpendingDTO]
+}
+
+struct SpendingSummaryDTO: Codable {
+    let limitMinor: Int64
+    let spentMinor: Int64
+}
+
+struct CategorySpendingDTO: Codable {
+    let categoryId: String
+    let limitMinor: Int64
+    let spentMinor: Int64
+}
+
+struct ReportSummaryDTO: Codable {
+    let totalIncomeMinor: Int64
+    let totalExpensesMinor: Int64
+    let balanceMinor: Int64
+    let perCategory: [CategorySummaryDTO]
+    let perMonth: [MonthlySummaryDTO]
+    let recentTransactions: [TransactionSummaryDTO]
+}
+
+struct CategorySummaryDTO: Codable {
+    let categoryId: String
+    let spentMinor: Int64
+}
+
+struct MonthlySummaryDTO: Codable {
+    let month: String // "2025-10"
+    let incomeMinor: Int64
+    let expenseMinor: Int64
+}
+
+struct TransactionSummaryDTO: Codable {
+    let id: String
+    let categoryId: String
+    let amountMinor: Int64
+}
+
+struct ExportResponse: Codable {
+    let exportId: String
+}
+
 // MARK: - Demo Data
 
 class DemoData {
