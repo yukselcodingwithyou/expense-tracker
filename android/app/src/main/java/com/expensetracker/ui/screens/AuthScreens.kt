@@ -17,6 +17,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.expensetracker.ui.auth.AuthViewModel
 import com.expensetracker.ui.theme.*
 import com.expensetracker.ui.components.*
 
@@ -261,12 +263,21 @@ fun AuthSelectionScreen(
 
 @Composable
 fun EnhancedLoginScreen(
-    onNavigateToDashboard: () -> Unit = {}
+    onNavigateToDashboard: () -> Unit = {},
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
     var isSignUp by remember { mutableStateOf(false) }
+    
+    val authState by authViewModel.uiState.collectAsState()
+    
+    // Navigate to dashboard when authenticated
+    LaunchedEffect(authState.isAuthenticated) {
+        if (authState.isAuthenticated) {
+            onNavigateToDashboard()
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -346,17 +357,39 @@ fun EnhancedLoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             PrimaryButton(
-                text = if (isLoading) "" else if (isSignUp) "Create Account" else "Sign In",
+                text = if (authState.isLoading) "" else if (isSignUp) "Create Account" else "Sign In",
                 onClick = {
-                    isLoading = true
-                    // TODO: Implement actual auth
-                    kotlinx.coroutines.GlobalScope.launch {
-                        kotlinx.coroutines.delay(1000)
-                        onNavigateToDashboard()
+                    if (email.isNotBlank() && password.isNotBlank()) {
+                        if (isSignUp) {
+                            authViewModel.signup(email, password)
+                        } else {
+                            authViewModel.login(email, password)
+                        }
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !authState.isLoading && email.isNotBlank() && password.isNotBlank()
             )
+            
+            // Show error message if exists
+            authState.error?.let { error ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+            
+            // Show loading indicator
+            if (authState.isLoading) {
+                Spacer(modifier = Modifier.height(16.dp))
+                CircularProgressIndicator(
+                    color = PrimaryBlue,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             
             TextButton(
                 onClick = { isSignUp = !isSignUp },

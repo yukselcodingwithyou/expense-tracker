@@ -87,6 +87,52 @@ RECENT_RESPONSE=$(curl -s -X GET "$BASE_URL/ledger/recent" \
 
 echo "Recent transactions: $RECENT_RESPONSE" | jq '.'
 
+# Test budget creation
+echo ""
+echo "💰 Testing budget creation..."
+BUDGET_RESPONSE=$(curl -s -X POST "$BASE_URL/budgets" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $ACCESS_TOKEN" \
+    -d '{
+        "name": "Monthly Budget",
+        "period": {
+            "type": "MONTH",
+            "start": "2025-01-01",
+            "end": "2025-01-31"
+        },
+        "overallLimitMinor": 500000,
+        "includeRecurring": true,
+        "alertThresholdPct": 80,
+        "perCategory": [
+            {
+                "categoryId": "'$CATEGORY_ID'",
+                "limitMinor": 100000
+            }
+        ]
+    }')
+
+echo "Budget response: $BUDGET_RESPONSE" | jq '.'
+
+# Extract budget ID
+BUDGET_ID=$(echo "$BUDGET_RESPONSE" | jq -r '.id')
+echo "Budget ID: $BUDGET_ID"
+
+# Test budget status
+echo ""
+echo "📊 Testing budget status..."
+BUDGET_STATUS_RESPONSE=$(curl -s -X GET "$BASE_URL/budgets/$BUDGET_ID/status" \
+    -H "Authorization: Bearer $ACCESS_TOKEN")
+
+echo "Budget status: $BUDGET_STATUS_RESPONSE" | jq '.'
+
+# Test budget list
+echo ""
+echo "📋 Testing budget list..."
+BUDGET_LIST_RESPONSE=$(curl -s -X GET "$BASE_URL/budgets" \
+    -H "Authorization: Bearer $ACCESS_TOKEN")
+
+echo "Budget list: $BUDGET_LIST_RESPONSE" | jq '.'
+
 echo ""
 echo "🎉 All tests passed! Expense Tracker backend is working correctly."
 echo ""
