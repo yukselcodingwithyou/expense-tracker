@@ -100,4 +100,17 @@ public class JwtTokenProvider {
     public long getAccessTokenExpiration() {
         return accessTokenExpiration;
     }
+
+    public Date getExpirationFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getExpiration();
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
 }
