@@ -3,19 +3,26 @@ import Foundation
 struct User: Codable, Identifiable {
     let id: String
     let email: String
+    let families: [FamilyMembership]?
+    let preferredFamilyId: String?
+    
+    init(id: String, email: String, families: [FamilyMembership]? = nil, preferredFamilyId: String? = nil) {
+        self.id = id
+        self.email = email
+        self.families = families
+        self.preferredFamilyId = preferredFamilyId
+    }
+}
+
+struct FamilyMembership: Codable {
+    let familyId: String
+    let role: String // "ADMIN" or "MEMBER"
 }
 
 struct AuthResponse: Codable {
     let accessToken: String
     let refreshToken: String
-    let tokenType: String
-    let expiresIn: Int
-    let user: UserInfo
-    
-    struct UserInfo: Codable {
-        let id: String
-        let email: String
-    }
+    let user: User
 }
 
 struct LoginRequest: Codable {

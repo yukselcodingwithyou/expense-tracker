@@ -4,30 +4,68 @@ import Combine
 class AuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var user: User?
+    @Published var errorMessage: String?
+    @Published var isLoading = false
     
     private let apiService = APIService()
     
-    func login(email: String, password: String) async throws {
-        // TODO: Implement actual login with API
-        try await Task.sleep(nanoseconds: 1_000_000_000) // Simulate network delay
-        
-        DispatchQueue.main.async {
-            self.isAuthenticated = true
-        }
+    init() {
+        // Check if user is already authenticated
+        isAuthenticated = apiService.isAuthenticated()
     }
     
-    func signup(email: String, password: String) async throws {
-        // TODO: Implement actual signup with API
-        try await Task.sleep(nanoseconds: 1_000_000_000) // Simulate network delay
+    @MainActor
+    func login(email: String, password: String) async {
+        isLoading = true
+        errorMessage = nil
         
-        DispatchQueue.main.async {
-            self.isAuthenticated = true
+        do {
+            let response = try await apiService.login(email: email, password: password)
+            user = response.user
+            isAuthenticated = true
+        } catch {
+            errorMessage = error.localizedDescription
+            isAuthenticated = false
         }
+        
+        isLoading = false
     }
     
-    func logout() {
-        // TODO: Implement actual logout with API
+    @MainActor
+    func signup(email: String, password: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let response = try await apiService.signup(email: email, password: password)
+            user = response.user
+            isAuthenticated = true
+        } catch {
+            errorMessage = error.localizedDescription
+            isAuthenticated = false
+        }
+        
+        isLoading = false
+    }
+    
+    @MainActor
+    func logout() async {
+        isLoading = true
+        
+        do {
+            try await apiService.logout()
+        } catch {
+            // Even if logout API fails, clear local state
+            print("Logout API failed: \(error.localizedDescription)")
+        }
+        
         isAuthenticated = false
         user = nil
+        errorMessage = nil
+        isLoading = false
+    }
+    
+    func clearError() {
+        errorMessage = nil
     }
 }
