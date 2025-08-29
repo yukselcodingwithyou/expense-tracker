@@ -27,6 +27,9 @@ public class User {
     
     private List<FamilyMembership> families = new ArrayList<>();
     
+    // The user's preferred family context for the current session
+    private String preferredFamilyId;
+    
     private Instant createdAt;
     private Instant updatedAt;
     private Instant deletedAt;
@@ -80,6 +83,9 @@ public class User {
 
     public List<FamilyMembership> getFamilies() { return families; }
     public void setFamilies(List<FamilyMembership> families) { this.families = families; }
+
+    public String getPreferredFamilyId() { return preferredFamilyId; }
+    public void setPreferredFamilyId(String preferredFamilyId) { this.preferredFamilyId = preferredFamilyId; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
