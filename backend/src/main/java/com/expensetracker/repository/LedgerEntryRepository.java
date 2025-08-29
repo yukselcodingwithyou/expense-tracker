@@ -25,5 +25,8 @@ public interface LedgerEntryRepository extends MongoRepository<LedgerEntry, Stri
     @Query("{'familyId': ?0, 'categoryId': ?1, 'occurredAt': {'$gte': ?2, '$lte': ?3}, 'deletedAt': null}")
     List<LedgerEntry> findByFamilyIdAndCategoryIdAndOccurredAtBetweenAndDeletedAtIsNull(String familyId, String categoryId, Instant from, Instant to);
     
+    @Query("{'familyId': ?0, 'type': ?1, 'occurredAt': {'$gte': ?2, '$lte': ?3}, 'deletedAt': null}")
+    List<LedgerEntry> findByFamilyIdAndTypeAndOccurredAtBetweenAndDeletedAtIsNull(String familyId, LedgerEntry.TransactionType type, Instant from, Instant to);
+    
     List<LedgerEntry> findTop5ByFamilyIdAndDeletedAtIsNullOrderByOccurredAtDesc(String familyId);
 }

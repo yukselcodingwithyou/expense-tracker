@@ -3,9 +3,33 @@ import Foundation
 class APIService {
     private let baseURL = "http://localhost:8080/api/v1"
     private let session = URLSession.shared
+    private let keychainService = "com.expensetracker.tokens"
     
-    // TODO: Implement token storage and refresh
-    private var accessToken: String?
+    private var accessToken: String? {
+        get {
+            KeychainHelper.shared.loadString(service: keychainService, key: "accessToken")
+        }
+        set {
+            if let token = newValue {
+                KeychainHelper.shared.save(token, service: keychainService, key: "accessToken")
+            } else {
+                KeychainHelper.shared.delete(service: keychainService, key: "accessToken")
+            }
+        }
+    }
+    
+    private var refreshToken: String? {
+        get {
+            KeychainHelper.shared.loadString(service: keychainService, key: "refreshToken")
+        }
+        set {
+            if let token = newValue {
+                KeychainHelper.shared.save(token, service: keychainService, key: "refreshToken")
+            } else {
+                KeychainHelper.shared.delete(service: keychainService, key: "refreshToken")
+            }
+        }
+    }
     
     func login(email: String, password: String) async throws -> AuthResponse {
         let request = LoginRequest(email: email, password: password)
@@ -14,7 +38,11 @@ class APIService {
             method: "POST",
             body: request
         )
+        
+        // Store tokens securely in Keychain
         self.accessToken = response.accessToken
+        self.refreshToken = response.refreshToken
+        
         return response
     }
     
@@ -25,8 +53,31 @@ class APIService {
             method: "POST",
             body: request
         )
+        
+        // Store tokens securely in Keychain
         self.accessToken = response.accessToken
+        self.refreshToken = response.refreshToken
+        
         return response
+    }
+    
+    func logout() async throws {
+        // Call logout API to blacklist token on server
+        if accessToken != nil {
+            try? await performRequest<EmptyBody, EmptyResponse>(
+                endpoint: "/auth/logout",
+                method: "POST",
+                requiresAuth: true
+            )
+        }
+        
+        // Clear tokens from Keychain
+        self.accessToken = nil
+        self.refreshToken = nil
+    }
+    
+    func isAuthenticated() -> Bool {
+        return accessToken != nil
     }
     
     func getCategories() async throws -> [Category] {
@@ -74,19 +125,35 @@ class APIService {
         }
         
         guard 200...299 ~= httpResponse.statusCode else {
+            if httpResponse.statusCode == 401 {
+                // Token might be expired, clear it
+                accessToken = nil
+                refreshToken = nil
+                throw APIError.unauthorized
+            }
             throw APIError.serverError(httpResponse.statusCode)
         }
         
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         
+        // Handle empty responses
+        if data.isEmpty {
+            return EmptyResponse() as! R
+        }
+        
         return try decoder.decode(R.self, from: data)
     }
 }
 
+// Helper structures for empty requests/responses
+struct EmptyBody: Codable {}
+struct EmptyResponse: Codable {}
+
 enum APIError: Error, LocalizedError {
     case invalidURL
     case invalidResponse
+    case unauthorized
     case serverError(Int)
     
     var errorDescription: String? {
@@ -95,6 +162,8 @@ enum APIError: Error, LocalizedError {
             return "Invalid URL"
         case .invalidResponse:
             return "Invalid response"
+        case .unauthorized:
+            return "Unauthorized - please log in again"
         case .serverError(let code):
             return "Server error: \(code)"
         }

@@ -2,6 +2,7 @@ package com.expensetracker.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.expensetracker.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    // TODO: Inject AuthRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -22,13 +23,18 @@ class AuthViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                // TODO: Implement actual login
-                // For now, simulate success
-                kotlinx.coroutines.delay(1000)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isAuthenticated = true
-                )
+                val result = authRepository.login(email, password)
+                if (result.isSuccess) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isAuthenticated = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = result.exceptionOrNull()?.message ?: "Login failed"
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -43,13 +49,18 @@ class AuthViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                // TODO: Implement actual signup
-                // For now, simulate success
-                kotlinx.coroutines.delay(1000)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isAuthenticated = true
-                )
+                val result = authRepository.signup(email, password)
+                if (result.isSuccess) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isAuthenticated = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = result.exceptionOrNull()?.message ?: "Signup failed"
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -57,6 +68,17 @@ class AuthViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+            _uiState.value = _uiState.value.copy(isAuthenticated = false)
+        }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }
 
