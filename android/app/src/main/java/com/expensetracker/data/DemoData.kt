@@ -58,6 +58,108 @@ data class RecurringExpense(
     val nextDate: Date
 )
 
+// New data models matching backend DTOs
+data class LedgerCreateDTO(
+    val type: String, // "EXPENSE" or "INCOME"
+    val amountMinor: Long,
+    val currency: String,
+    val categoryId: String,
+    val memberId: String,
+    val occurredAt: String, // ISO 8601 timestamp
+    val notes: String? = null
+)
+
+data class RecurringRuleDTO(
+    val id: String? = null,
+    val familyId: String,
+    val name: String,
+    val type: String, // "EXPENSE" or "INCOME"
+    val amountMinor: Long,
+    val currency: String,
+    val categoryId: String,
+    val memberId: String,
+    val frequency: FrequencyDTO,
+    val startDate: String, // ISO date
+    val endDate: String? = null,
+    val timezone: String,
+    val nextRunAt: String? = null,
+    val isPaused: Boolean = false
+)
+
+data class FrequencyDTO(
+    val unit: String, // "WEEKLY", "MONTHLY", "YEARLY"
+    val interval: Int = 1,
+    val byMonthDay: List<Int>? = null
+)
+
+data class BudgetDTO(
+    val id: String? = null,
+    val name: String,
+    val period: PeriodDTO,
+    val overallLimitMinor: Long,
+    val includeRecurring: Boolean = true,
+    val alertThresholdPct: Int = 80,
+    val perCategory: List<CategoryBudgetDTO> = emptyList()
+)
+
+data class PeriodDTO(
+    val type: String, // "MONTH", "QUARTER", "YEAR", "CUSTOM"
+    val start: String, // ISO date
+    val end: String // ISO date
+)
+
+data class CategoryBudgetDTO(
+    val categoryId: String,
+    val limitMinor: Long
+)
+
+data class BudgetSpendDTO(
+    val period: PeriodDTO,
+    val overall: SpendingSummaryDTO,
+    val byCategory: List<CategorySpendingDTO>
+)
+
+data class SpendingSummaryDTO(
+    val limitMinor: Long,
+    val spentMinor: Long
+)
+
+data class CategorySpendingDTO(
+    val categoryId: String,
+    val limitMinor: Long,
+    val spentMinor: Long
+)
+
+data class ReportSummaryDTO(
+    val totalIncomeMinor: Long,
+    val totalExpensesMinor: Long,
+    val balanceMinor: Long,
+    val perCategory: List<CategorySummaryDTO>,
+    val perMonth: List<MonthlySummaryDTO>,
+    val recentTransactions: List<TransactionSummaryDTO>
+)
+
+data class CategorySummaryDTO(
+    val categoryId: String,
+    val spentMinor: Long
+)
+
+data class MonthlySummaryDTO(
+    val month: String, // "2025-10"
+    val incomeMinor: Long,
+    val expenseMinor: Long
+)
+
+data class TransactionSummaryDTO(
+    val id: String,
+    val categoryId: String,
+    val amountMinor: Long
+)
+
+data class ExportResponse(
+    val exportId: String
+)
+
 // Demo Data Object
 object DemoData {
     const val totalIncome: Double = 12500.00
@@ -186,4 +288,17 @@ fun Date.formatAsShort(): String {
 fun Date.formatAsTime(): String {
     val formatter = SimpleDateFormat("h:mm a", Locale.US)
     return formatter.format(this)
+}
+
+// Money helpers for backend integration (amountMinor = cents)
+fun Double.toAmountMinor(): Long {
+    return (this * 100).toLong()
+}
+
+fun Long.fromAmountMinor(): Double {
+    return this / 100.0
+}
+
+fun Long.formatAmountMinorAsCurrency(): String {
+    return this.fromAmountMinor().formatAsCurrency()
 }
