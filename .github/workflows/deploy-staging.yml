@@ -1,0 +1,103 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    
+    - name: Build application
+      run: |
+        cd backend
+        mvn clean package -DskipTests
+    
+    - name: Build Docker image
+      run: |
+        cd backend
+        docker build -t expense-tracker-backend:staging .
+        
+    - name: Log in to container registry
+      if: env.DOCKER_REGISTRY != ''
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.DOCKER_REGISTRY }}
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Push Docker image
+      if: env.DOCKER_REGISTRY != ''
+      run: |
+        docker tag expense-tracker-backend:staging ${{ env.DOCKER_REGISTRY }}/expense-tracker-backend:staging
+        docker push ${{ env.DOCKER_REGISTRY }}/expense-tracker-backend:staging
+    
+    - name: Deploy to staging environment
+      run: |
+        echo "Deploying backend to staging environment..."
+        echo "Image: expense-tracker-backend:staging"
+        echo "Environment: staging"
+        # Add your deployment script here
+        # Example: kubectl apply -f k8s/staging/
+        # Example: docker-compose -f docker-compose.staging.yml up -d
+        
+    - name: Run health check
+      run: |
+        echo "Running health check..."
+        # Add health check commands here
+        # Example: curl -f http://staging-api.example.com/health || exit 1
+        
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Staging deployment successful"
+        else
+          echo "❌ Staging deployment failed"
+        fi
+        # Add notification logic here (Slack, Discord, etc.)
+
+  deploy-mobile-builds:
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Build Android APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug
+    
+    - name: Upload to App Distribution
+      run: |
+        echo "Uploading Android APK to staging distribution..."
+        # Add Firebase App Distribution or similar service upload
+        # Example: firebase appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk
+        
+    - name: Upload iOS build
+      run: |
+        echo "Building and uploading iOS app to TestFlight staging..."
+        # Add iOS build and TestFlight upload
+        # Example: fastlane staging_deploy

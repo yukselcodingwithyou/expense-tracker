@@ -183,6 +183,100 @@ class APIService {
         )
     }
     
+    // MARK: - Notifications
+    func getNotifications() async throws -> [Notification] {
+        return try await performRequest(
+            endpoint: "/notifications",
+            method: "GET",
+            requiresAuth: true
+        )
+    }
+    
+    func getUnreadNotifications() async throws -> [Notification] {
+        return try await performRequest(
+            endpoint: "/notifications/unread",
+            method: "GET",
+            requiresAuth: true
+        )
+    }
+    
+    func getUnreadCount() async throws -> UnreadCountResponse {
+        return try await performRequest(
+            endpoint: "/notifications/unread/count",
+            method: "GET",
+            requiresAuth: true
+        )
+    }
+    
+    func markNotificationAsRead(id: String) async throws {
+        let _: EmptyResponse = try await performRequest(
+            endpoint: "/notifications/\(id)/read",
+            method: "POST",
+            requiresAuth: true
+        )
+    }
+    
+    // MARK: - File Upload
+    func uploadFile(_ fileData: Data, fileName: String, contentType: String, for ledgerEntryId: String) async throws -> Attachment {
+        guard let url = URL(string: baseURL + "/files/upload/\(ledgerEntryId)") else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        if let token = accessToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(contentType)\r\n\r\n".data(using: .utf8)!)
+        body.append(fileData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        request.httpBody = body
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        guard 200...299 ~= httpResponse.statusCode else {
+            if httpResponse.statusCode == 401 {
+                accessToken = nil
+                refreshToken = nil
+                throw APIError.unauthorized
+            }
+            throw APIError.serverError(httpResponse.statusCode)
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(Attachment.self, from: data)
+    }
+    
+    func getAttachments(for ledgerEntryId: String) async throws -> [Attachment] {
+        return try await performRequest(
+            endpoint: "/files/ledger/\(ledgerEntryId)",
+            method: "GET",
+            requiresAuth: true
+        )
+    }
+    
+    func deleteAttachment(id: String) async throws {
+        let _: EmptyResponse = try await performRequest(
+            endpoint: "/files/\(id)",
+            method: "DELETE",
+            requiresAuth: true
+        )
+    }
+    
     private func performRequest<T: Codable, R: Codable>(
         endpoint: String,
         method: String,

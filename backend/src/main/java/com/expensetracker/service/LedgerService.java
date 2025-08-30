@@ -122,6 +122,13 @@ public class LedgerService {
                 .collect(Collectors.toList());
     }
 
+    public LedgerEntry getEntryById(String userId, String entryId) {
+        String familyId = userService.getCurrentUserFamilyId(userId);
+        
+        return ledgerEntryRepository.findByIdAndFamilyIdAndDeletedAtIsNull(entryId, familyId)
+                .orElseThrow(() -> new RuntimeException("Ledger entry not found"));
+    }
+
     private String getCategoryName(String categoryId) {
         Optional<Category> category = categoryRepository.findById(categoryId);
         return category.map(Category::getName).orElse("Unknown");

@@ -1,0 +1,104 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: [ 'ios/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'ios/**' ]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    
+    - name: Cache Swift Package Manager dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ios/ExpenseTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+        key: ${{ runner.os }}-spm-${{ hashFiles('ios/ExpenseTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Build project
+      run: |
+        cd ios
+        xcodebuild -project ExpenseTracker.xcodeproj \
+                   -scheme ExpenseTracker \
+                   -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+                   clean build \
+                   CODE_SIGNING_ALLOWED=NO
+    
+    - name: Run unit tests
+      run: |
+        cd ios
+        xcodebuild -project ExpenseTracker.xcodeproj \
+                   -scheme ExpenseTracker \
+                   -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+                   test \
+                   CODE_SIGNING_ALLOWED=NO
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ios-test-results
+        path: ios/build/reports/
+        retention-days: 7
+        
+    - name: SwiftLint
+      run: |
+        if which swiftlint >/dev/null; then
+          cd ios
+          swiftlint
+        else
+          echo "SwiftLint not installed, skipping..."
+        fi
+        
+  build-archive:
+    runs-on: macos-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    
+    - name: Cache Swift Package Manager dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ios/ExpenseTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+        key: ${{ runner.os }}-spm-${{ hashFiles('ios/ExpenseTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Archive project
+      run: |
+        cd ios
+        xcodebuild -project ExpenseTracker.xcodeproj \
+                   -scheme ExpenseTracker \
+                   -destination 'generic/platform=iOS' \
+                   -archivePath ExpenseTracker.xcarchive \
+                   archive \
+                   CODE_SIGNING_ALLOWED=NO
+    
+    - name: Upload archive
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-archive
+        path: ios/ExpenseTracker.xcarchive
+        retention-days: 7
