@@ -19,7 +19,9 @@ import com.expensetracker.data.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(
+    onNavigateToAddExpense: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -36,7 +38,7 @@ fun DashboardScreen() {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: Navigate to add expense */ },
+                onClick = onNavigateToAddExpense,
                 containerColor = PrimaryBlue,
                 contentColor = OnPrimary
             ) {
@@ -238,6 +240,6 @@ fun DashboardScreen() {
 @Composable
 fun DashboardScreenPreview() {
     ExpenseTrackerTheme {
-        DashboardScreen()
+        DashboardScreen(onNavigateToAddExpense = {})
     }
 }

@@ -8,11 +8,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.expensetracker.data.*
+import com.expensetracker.data.repository.LedgerRepository
+import com.expensetracker.data.repository.BudgetRepository
+import com.expensetracker.data.repository.RecurringRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class ExpenseViewModel @Inject constructor(
-    // TODO: Inject repositories
+    private val ledgerRepository: LedgerRepository,
+    private val budgetRepository: BudgetRepository,
+    private val recurringRepository: RecurringRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ExpenseUiState())
@@ -23,14 +28,18 @@ class ExpenseViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                // TODO: Call repository to add expense
-                // For now, simulate API call
-                kotlinx.coroutines.delay(1000)
-                
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isSuccess = true
-                )
+                val result = ledgerRepository.createEntry(ledgerCreate)
+                if (result.isSuccess) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = result.exceptionOrNull()?.message ?: "Failed to add expense"
+                    )
+                }
                 
                 // Analytics hook
                 // Analytics.track("expense_add", mapOf(
@@ -53,13 +62,18 @@ class ExpenseViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                // TODO: Call repository to add recurring rule
-                kotlinx.coroutines.delay(1000)
-                
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isSuccess = true
-                )
+                val result = recurringRepository.createRecurringRule(recurringRule)
+                if (result.isSuccess) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = result.exceptionOrNull()?.message ?: "Failed to add recurring transaction"
+                    )
+                }
                 
                 // Analytics hook
                 // Analytics.track("recurring_add", mapOf(
@@ -81,13 +95,18 @@ class ExpenseViewModel @Inject constructor(
         
         viewModelScope.launch {
             try {
-                // TODO: Call repository to save budget
-                kotlinx.coroutines.delay(1000)
-                
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isSuccess = true
-                )
+                val result = budgetRepository.createBudget(budget)
+                if (result.isSuccess) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = result.exceptionOrNull()?.message ?: "Failed to save budget"
+                    )
+                }
                 
                 // Analytics hook
                 // Analytics.track("budget_saved", mapOf(

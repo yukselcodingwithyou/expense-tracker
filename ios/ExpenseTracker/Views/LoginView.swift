@@ -4,7 +4,6 @@ struct LoginView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var email = ""
     @State private var password = ""
-    @State private var isLoading = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -26,7 +25,7 @@ struct LoginView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                 
                 Button(action: login) {
-                    if isLoading {
+                    if authManager.isLoading {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     } else {
@@ -38,12 +37,12 @@ struct LoginView: View {
                 .background(Color.blue)
                 .foregroundColor(.white)
                 .cornerRadius(10)
-                .disabled(isLoading || email.isEmpty || password.isEmpty)
+                .disabled(authManager.isLoading || email.isEmpty || password.isEmpty)
                 
                 Button("Don't have an account? Sign up") {
                     signup()
                 }
-                .disabled(isLoading)
+                .disabled(authManager.isLoading)
             }
             
             Spacer()
@@ -52,22 +51,14 @@ struct LoginView: View {
     }
     
     private func login() {
-        isLoading = true
-        
-        // TODO: Implement actual login
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            authManager.isAuthenticated = true
-            isLoading = false
+        Task {
+            await authManager.login(email: email, password: password)
         }
     }
     
     private func signup() {
-        isLoading = true
-        
-        // TODO: Implement actual signup
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            authManager.isAuthenticated = true
-            isLoading = false
+        Task {
+            await authManager.signup(email: email, password: password)
         }
     }
 }

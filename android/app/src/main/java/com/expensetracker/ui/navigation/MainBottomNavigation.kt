@@ -89,7 +89,11 @@ fun MainBottomNavigation() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Dashboard.route) {
-                DashboardScreen()
+                DashboardScreen(
+                    onNavigateToAddExpense = {
+                        navController.navigate(BottomNavItem.Expenses.route)
+                    }
+                )
             }
             composable(BottomNavItem.Expenses.route) {
                 AddExpenseScreen()
