@@ -2,10 +2,13 @@ import SwiftUI
 
 @main
 struct ExpenseTrackerApp: App {
+    // Initialize persistence controller as shared instance
+    let persistenceController = PersistenceController.shared
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(AuthManager())
+            RootNavigationView()
+                .environment(\.managedObjectContext, persistenceController.context)
         }
     }
 }
