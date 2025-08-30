@@ -2,7 +2,7 @@ package com.expensetracker.di
 
 import com.expensetracker.BuildConfig
 import com.expensetracker.data.local.TokenManager
-import com.expensetracker.data.network.AuthApiService
+import com.expensetracker.data.network.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -88,5 +88,29 @@ object NetworkModule {
     @Singleton
     fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
         return retrofit.create(AuthApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLedgerApiService(retrofit: Retrofit): LedgerApiService {
+        return retrofit.create(LedgerApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBudgetApiService(retrofit: Retrofit): BudgetApiService {
+        return retrofit.create(BudgetApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRecurringApiService(retrofit: Retrofit): RecurringApiService {
+        return retrofit.create(RecurringApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportApiService(retrofit: Retrofit): ReportApiService {
+        return retrofit.create(ReportApiService::class.java)
     }
 }
