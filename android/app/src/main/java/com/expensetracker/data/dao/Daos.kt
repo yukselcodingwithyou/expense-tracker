@@ -56,6 +56,9 @@ interface CategoryDao {
 
     @Delete
     suspend fun deleteCategory(category: CategoryEntity)
+    
+    @Query("DELETE FROM categories WHERE id = :categoryId")
+    suspend fun deleteCategoryById(categoryId: String)
 
     @Query("DELETE FROM categories WHERE familyId = :familyId")
     suspend fun deleteAllForFamily(familyId: String)
@@ -80,6 +83,9 @@ interface BudgetDao {
 
     @Delete
     suspend fun deleteBudget(budget: BudgetEntity)
+    
+    @Query("DELETE FROM budgets WHERE id = :budgetId")
+    suspend fun deleteByIdMethod(budgetId: String)
 
     @Query("DELETE FROM budgets WHERE familyId = :familyId")
     suspend fun deleteAllForFamily(familyId: String)
