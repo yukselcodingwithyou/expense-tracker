@@ -161,3 +161,41 @@ struct ExportResponse: Codable {
     let contentType: String
     let filename: String
 }
+
+// MARK: - Notifications
+struct Notification: Codable, Identifiable {
+    let id: String
+    let userId: String
+    let familyId: String
+    let type: NotificationType
+    let title: String
+    let message: String
+    let data: [String: String]?
+    let isRead: Bool
+    let emailSent: Bool
+    let createdAt: Date
+    
+    enum NotificationType: String, Codable {
+        case budgetAlert = "BUDGET_ALERT"
+        case budgetExceeded = "BUDGET_EXCEEDED"
+        case weeklySummary = "WEEKLY_SUMMARY"
+        case monthlyReport = "MONTHLY_REPORT"
+    }
+}
+
+struct UnreadCountResponse: Codable {
+    let count: Int64
+}
+
+// MARK: - File Attachments
+struct Attachment: Codable, Identifiable {
+    let id: String
+    let ledgerEntryId: String
+    let filename: String
+    let originalFilename: String
+    let contentType: String
+    let size: Int64
+    let storageKey: String
+    let uploadedAt: Date
+}
+}

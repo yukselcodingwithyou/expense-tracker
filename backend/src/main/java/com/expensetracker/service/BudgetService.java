@@ -20,11 +20,16 @@ public class BudgetService {
     private final BudgetRepository budgetRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
-    public BudgetService(BudgetRepository budgetRepository, LedgerEntryRepository ledgerEntryRepository, UserService userService) {
+    public BudgetService(BudgetRepository budgetRepository, 
+                        LedgerEntryRepository ledgerEntryRepository, 
+                        UserService userService,
+                        NotificationService notificationService) {
         this.budgetRepository = budgetRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -64,6 +69,14 @@ public class BudgetService {
         }
         
         return budgetRepository.findByIdAndFamilyId(budgetId, familyId);
+    }
+
+    /**
+     * Get a specific budget by family and budget ID (for internal service use)
+     */
+    public Budget getBudgetByFamilyAndId(String familyId, String budgetId) {
+        return budgetRepository.findByIdAndFamilyId(budgetId, familyId)
+                .orElseThrow(() -> new RuntimeException("Budget not found"));
     }
 
     /**
@@ -132,6 +145,18 @@ public class BudgetService {
                         LedgerEntry::getCategoryId,
                         Collectors.summingLong(entry -> entry.getAmount().getMinor())
                 ));
+
+        // Check for budget alerts
+        double usagePercentage = budget.getOverallLimitMinor() > 0 ? 
+                (double) totalSpent / budget.getOverallLimitMinor() * 100 : 0;
+        
+        if (usagePercentage >= budget.getAlertThresholdPct()) {
+            notificationService.createBudgetAlert(userId, budgetId, usagePercentage);
+        }
+        
+        if (usagePercentage > 100) {
+            notificationService.createBudgetExceededAlert(userId, budgetId, usagePercentage);
+        }
 
         return buildBudgetSpendDTO(budget, totalSpent, spendingByCategory);
     }
