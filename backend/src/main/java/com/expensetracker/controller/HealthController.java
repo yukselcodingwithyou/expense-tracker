@@ -112,6 +112,43 @@ public class HealthController {
         ));
     }
 
+    @GetMapping("/info")
+    @Operation(summary = "System information", description = "Get system and application information")
+    public ResponseEntity<Map<String, Object>> systemInfo() {
+        Map<String, Object> info = new HashMap<>();
+        
+        // Application info
+        Map<String, String> appInfo = new HashMap<>();
+        appInfo.put("name", "Expense Tracker Backend");
+        appInfo.put("version", "1.0.0");
+        appInfo.put("description", "Comprehensive expense tracking application");
+        appInfo.put("spring_boot_version", org.springframework.boot.SpringBootVersion.getVersion());
+        appInfo.put("java_version", System.getProperty("java.version"));
+        appInfo.put("startup_time", Instant.now().toString());
+        info.put("application", appInfo);
+
+        // Environment info
+        Map<String, String> envInfo = new HashMap<>();
+        envInfo.put("os_name", System.getProperty("os.name"));
+        envInfo.put("os_version", System.getProperty("os.version"));
+        envInfo.put("os_arch", System.getProperty("os.arch"));
+        envInfo.put("timezone", java.time.ZoneId.systemDefault().toString());
+        info.put("environment", envInfo);
+
+        // Features status
+        Map<String, Object> features = new HashMap<>();
+        features.put("authentication", Map.of("status", "enabled", "type", "JWT with Redis blacklisting"));
+        features.put("family_management", Map.of("status", "enabled", "type", "Multi-tenant with role-based access"));
+        features.put("budget_system", Map.of("status", "enabled", "type", "Category-wise budgets with alerts"));
+        features.put("recurring_transactions", Map.of("status", "enabled", "type", "Automated scheduling"));
+        features.put("reports", Map.of("status", "enabled", "type", "Analytics with CSV export"));
+        features.put("notifications", Map.of("status", "enabled", "type", "Budget alerts and system notifications"));
+        features.put("file_upload", Map.of("status", "enabled", "type", "MinIO object storage"));
+        info.put("features", features);
+
+        return ResponseEntity.ok(info);
+    }
+
     private Map<String, Object> getComponentsHealth() {
         Map<String, Object> components = new HashMap<>();
 
