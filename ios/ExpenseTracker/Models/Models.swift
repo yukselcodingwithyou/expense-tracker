@@ -94,3 +94,70 @@ struct Family: Codable, Identifiable {
     let createdAt: Date
     let updatedAt: Date
 }
+
+struct Budget: Codable, Identifiable {
+    let id: String
+    let familyId: String
+    let name: String
+    let overallLimitMinor: Int64
+    let period: BudgetPeriod
+    let currency: String
+    let includeRecurring: Bool
+    let alertThresholdPct: Int
+    let perCategory: [CategoryBudget]
+    let createdAt: Date
+    let updatedAt: Date
+}
+
+struct BudgetPeriod: Codable {
+    let type: String // "MONTH", "QUARTER", "YEAR", "CUSTOM"
+    let start: Date
+    let end: Date
+}
+
+struct CategoryBudget: Codable {
+    let categoryId: String
+    let limitMinor: Int64
+}
+
+struct CreateBudgetRequest: Codable {
+    let name: String
+    let overallLimitMinor: Int64
+    let period: BudgetPeriod
+    let currency: String
+    let includeRecurring: Bool
+    let alertThresholdPct: Int
+    let perCategory: [CategoryBudget]
+}
+
+struct ReportSummary: Codable {
+    let totalIncomeMinor: Int64
+    let totalExpensesMinor: Int64
+    let balanceMinor: Int64
+    let perCategory: [CategorySummary]
+    let perMonth: [MonthlySummary]
+    let recentTransactions: [TransactionSummary]
+}
+
+struct CategorySummary: Codable {
+    let categoryId: String
+    let spentMinor: Int64
+}
+
+struct MonthlySummary: Codable {
+    let month: String // "2025-10"
+    let incomeMinor: Int64
+    let expenseMinor: Int64
+}
+
+struct TransactionSummary: Codable {
+    let id: String
+    let categoryId: String
+    let amountMinor: Int64
+}
+
+struct ExportResponse: Codable {
+    let content: String
+    let contentType: String
+    let filename: String
+}

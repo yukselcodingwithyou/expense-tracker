@@ -96,6 +96,93 @@ class APIService {
         )
     }
     
+    func getLedgerEntries() async throws -> [LedgerEntry] {
+        return try await performRequest(
+            endpoint: "/ledger",
+            method: "GET",
+            requiresAuth: true
+        )
+    }
+    
+    func createLedgerEntry(_ request: CreateLedgerEntryRequest) async throws {
+        let _: EmptyResponse = try await performRequest(
+            endpoint: "/ledger",
+            method: "POST",
+            body: request,
+            requiresAuth: true
+        )
+    }
+    
+    func updateLedgerEntry(id: String, request: CreateLedgerEntryRequest) async throws {
+        let _: EmptyResponse = try await performRequest(
+            endpoint: "/ledger/\(id)",
+            method: "PUT",
+            body: request,
+            requiresAuth: true
+        )
+    }
+    
+    func deleteLedgerEntry(id: String) async throws {
+        let _: EmptyResponse = try await performRequest(
+            endpoint: "/ledger/\(id)",
+            method: "DELETE",
+            requiresAuth: true
+        )
+    }
+    
+    func createBudget(_ request: CreateBudgetRequest) async throws -> Budget {
+        return try await performRequest(
+            endpoint: "/budget",
+            method: "POST",
+            body: request,
+            requiresAuth: true
+        )
+    }
+    
+    func getBudgets() async throws -> [Budget] {
+        return try await performRequest(
+            endpoint: "/budget",
+            method: "GET",
+            requiresAuth: true
+        )
+    }
+    
+    func deleteBudget(id: String) async throws {
+        let _: EmptyResponse = try await performRequest(
+            endpoint: "/budget/\(id)",
+            method: "DELETE",
+            requiresAuth: true
+        )
+    }
+    
+    func getReportSummary(startDate: Date, endDate: Date) async throws -> ReportSummary {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        
+        let startDateString = formatter.string(from: startDate)
+        let endDateString = formatter.string(from: endDate)
+        
+        return try await performRequest(
+            endpoint: "/reports/summary?startDate=\(startDateString)&endDate=\(endDateString)",
+            method: "GET",
+            requiresAuth: true
+        )
+    }
+    
+    func exportData(startDate: Date, endDate: Date, format: String = "CSV") async throws -> ExportResponse {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        
+        let startDateString = formatter.string(from: startDate)
+        let endDateString = formatter.string(from: endDate)
+        
+        return try await performRequest(
+            endpoint: "/reports/export?startDate=\(startDateString)&endDate=\(endDateString)&format=\(format)",
+            method: "GET",
+            requiresAuth: true
+        )
+    }
+    
     private func performRequest<T: Codable, R: Codable>(
         endpoint: String,
         method: String,

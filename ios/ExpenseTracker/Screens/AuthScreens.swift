@@ -206,7 +206,6 @@ struct EnhancedLoginView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var email = ""
     @State private var password = ""
-    @State private var isLoading = false
     @State private var isSignUp = false
     
     var body: some View {
@@ -256,7 +255,7 @@ struct EnhancedLoginView: View {
                 }
                 
                 Button(action: isSignUp ? signup : login) {
-                    if isLoading {
+                    if authManager.isLoading {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: Theme.Colors.onPrimary))
                     } else {
@@ -271,9 +270,9 @@ struct EnhancedLoginView: View {
                 .background(
                     RoundedRectangle(cornerRadius: Theme.Shapes.buttonCornerRadius)
                         .fill(Theme.Colors.primary)
-                        .opacity(isLoading || email.isEmpty || password.isEmpty ? 0.6 : 1.0)
+                        .opacity(authManager.isLoading || email.isEmpty || password.isEmpty ? 0.6 : 1.0)
                 )
-                .disabled(isLoading || email.isEmpty || password.isEmpty)
+                .disabled(authManager.isLoading || email.isEmpty || password.isEmpty)
                 
                 Button(isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up") {
                     isSignUp.toggle()
@@ -290,22 +289,14 @@ struct EnhancedLoginView: View {
     }
     
     private func login() {
-        isLoading = true
-        
-        // TODO: Implement actual login
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            authManager.isAuthenticated = true
-            isLoading = false
+        Task {
+            await authManager.login(email: email, password: password)
         }
     }
     
     private func signup() {
-        isLoading = true
-        
-        // TODO: Implement actual signup
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            authManager.isAuthenticated = true
-            isLoading = false
+        Task {
+            await authManager.signup(email: email, password: password)
         }
     }
 }
