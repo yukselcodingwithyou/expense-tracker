@@ -113,4 +113,16 @@ object NetworkModule {
     fun provideReportApiService(retrofit: Retrofit): ReportApiService {
         return retrofit.create(ReportApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideReceiptApiService(retrofit: Retrofit): ReceiptApiService {
+        return retrofit.create(ReceiptApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideVoiceExpenseApiService(retrofit: Retrofit): VoiceExpenseApiService {
+        return retrofit.create(VoiceExpenseApiService::class.java)
+    }
 }
